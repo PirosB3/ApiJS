@@ -4,12 +4,12 @@ var _parseRoute = function(route, args) {
 
 	// Parse route regex, if no matches, return the route
 	var matches = route.match(ROUTE_RE);
-	if (!matches) return route;
+	if (!matches) matches = [];
 
-	// Get first match and fetch property from args. if no
-	// matches, raise exception
-	var result = route;
-	matches.forEach(function(match) {
+	return matches.reduce(function(currentRoute, match) {
+
+		// Get first match and fetch property from args. if no
+		// matches, raise exception
 		var property = match.slice(2, match.length -2);
 		var propertyArg = args[property];
 		if (!propertyArg){
@@ -17,10 +17,9 @@ var _parseRoute = function(route, args) {
 		}
 
 		// Return new route with property
-		result = result.replace(match, propertyArg);
-	});
+		return currentRoute.replace(match, propertyArg);
+	}, route);
 
-	return result;
 }
 
 var _extend = function(oldParams, newParams) {
@@ -33,6 +32,22 @@ var APIProcess = function(params) {
 
 APIProcess.prototype.getDefaultParams = function() {
 	return this._params['defaultParams'];
+}
+
+APIProcess.prototype.havingPositional = function(args) {
+	return new APIProcess(_extend(this._params, {
+		positionalParams: args
+	}));
+}
+
+APIProcess.prototype._buildURL = function() {
+	if (!this._params['endpoint']) {
+		throw new Error("Endpoint was never defined");
+	}
+	return _parseRoute(
+		this._params['endpoint'],
+		_extend(this._params['positionalParams'])
+	);
 }
 
 APIProcess.prototype.callEndpoint = function(endpoint) {

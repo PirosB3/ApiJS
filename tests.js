@@ -19,7 +19,10 @@ describe("ApiJS", function() {
 	it("should be able to get a url with positional args", function() {
 		var Pearson = createAPI({ apiKey: 'myApiKey' });
 
-		var call = Pearson.callEndpoint('/topten/{id}');
-		expect(call._buildURL()).toBe('/topten/{id}');
+		var call = Pearson.callEndpoint('/topten/{{id}}');
+		expect(call._buildURL.bind(call)).toThrow("Property id was not found.");
+
+		call = call.havingPositional({ id: 23 });
+		expect(call._buildURL()).toBe('/topten/23');
 	});
 });
