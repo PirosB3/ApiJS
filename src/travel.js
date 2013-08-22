@@ -1,10 +1,10 @@
 var ROUTE_RE = /({{\w+}})/g;
 
-var _parseRoute = function(route, positionalArgs, getParams) {
+var _parseRoute = function(rootUrl, route, positionalArgs, getParams) {
 
 	// Parse route regex, if no matches, return the route
 	var matches = route.match(ROUTE_RE);
-	if (!matches) matches = [];
+	if (!matches) return [];
 
 	route = matches.reduce(function(currentRoute, match) {
 
@@ -18,7 +18,7 @@ var _parseRoute = function(route, positionalArgs, getParams) {
 
 		// Return new route with property
 		return currentRoute.replace(match, propertyArg);
-	}, route);
+	}, rootUrl + route);
 
 	// If there are any GET parameters, add them now and append to existing route.
 	var getParamsString = $.param(getParams || {});
@@ -59,6 +59,7 @@ APIProcess.prototype._buildURL = function() {
 		throw new Error("Endpoint was never defined");
 	}
 	return _parseRoute(
+		this._params['rootUrl'],
 		this._params['endpoint'],
 		_extend(this._params['positionalParams']),
 		_extend(this._params['defaultArgs'], this._params['args'])
@@ -77,9 +78,10 @@ APIProcess.prototype.fetch = function() {
 	});
 }
 
-var createAPI = function(params) {
+var createAPI = function(params, rootUrl) {
 	return new APIProcess({
-		defaultArgs: params
+		defaultArgs: params,
+		rootUrl: rootUrl
 	});
 };
 
