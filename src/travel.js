@@ -1,5 +1,8 @@
 var ROUTE_RE = /({{\w+}})/g;
 
+
+
+/* HELPER FUNCTIONS */
 var _parseRoute = function(rootUrl, route, positionalArgs, getParams) {
 
 	// Parse route regex, if no matches, return the route
@@ -38,22 +41,7 @@ var APIProcess = function(params) {
 	this._params = params;
 }
 
-APIProcess.prototype.getDefaultParams = function() {
-	return this._params['defaultArgs'];
-}
-
-APIProcess.prototype.withArgs = function(args) {
-	return new APIProcess(_extend(this._params, {
-		args: args
-	}));
-}
-
-APIProcess.prototype.havingPositional = function(args) {
-	return new APIProcess(_extend(this._params, {
-		positionalParams: args
-	}));
-}
-
+/* APIProcess */
 APIProcess.prototype._buildURL = function() {
 	if (!this._params['endpoint']) {
 		throw new Error("Endpoint was never defined");
@@ -66,10 +54,20 @@ APIProcess.prototype._buildURL = function() {
 	);
 }
 
-APIProcess.prototype.callEndpoint = function(endpoint) {
-	return new APIProcess(_extend(this._params, {
-		endpoint: endpoint
-	}));
+APIProcess.prototype._addToEndpoint = function(key) {
+	return function(value) {
+		var ex = {};
+		ex[key] = value;
+		return new APIProcess(_extend(this._params, ex));
+	}
+}
+
+APIProcess.prototype.callEndpoint = APIProcess.prototype._addToEndpoint('endpoint');
+APIProcess.prototype.havingPositional = APIProcess.prototype._addToEndpoint('positionalParams');
+APIProcess.prototype.withArgs = APIProcess.prototype._addToEndpoint('args');
+
+APIProcess.prototype.getDefaultParams = function() {
+	return this._params['defaultArgs'];
 }
 
 APIProcess.prototype.fetch = function() {
@@ -78,6 +76,7 @@ APIProcess.prototype.fetch = function() {
 	});
 }
 
+/* Initialize Interface */
 var createAPI = function(params, rootUrl) {
 	return new APIProcess({
 		defaultArgs: params,
