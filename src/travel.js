@@ -81,7 +81,7 @@ APIProcess.prototype.fetch = function() {
 var createAPI = function(params, rootUrl) {
 	return new APIProcess({
 		defaultArgs: params,
-		rootUrl: rootUrl
+		rootUrl: rootUrl || ''
 	});
 };
 
