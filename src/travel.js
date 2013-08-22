@@ -4,7 +4,7 @@ var _parseRoute = function(rootUrl, route, positionalArgs, getParams) {
 
 	// Parse route regex, if no matches, return the route
 	var matches = route.match(ROUTE_RE);
-	if (!matches) return [];
+	if (!matches) matches = [];
 
 	route = matches.reduce(function(currentRoute, match) {
 
