@@ -23,6 +23,14 @@ describe("ApiJS", function() {
 		expect(call._buildURL.bind(call)).toThrow("Property id was not found.");
 
 		call = call.havingPositional({ id: 23 });
-		expect(call._buildURL()).toBe('/topten/23');
+		expect(call._buildURL()).toBe('/topten/23?apiKey=myApiKey');
+	});
+	it("should be able to add params", function() {
+		var Pearson = createAPI({ apiKey: 'myApiKey' });
+
+		var url = Pearson.callEndpoint('/topten')
+			.withArgs({ hello: 'world', one: 'two' })
+			._buildURL();
+		expect(url).toBe('/topten?apiKey=myApiKey&hello=world&one=two');
 	});
 });

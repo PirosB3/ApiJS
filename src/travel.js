@@ -1,17 +1,17 @@
 var ROUTE_RE = /({{\w+}})/g;
 
-var _parseRoute = function(route, args) {
+var _parseRoute = function(route, positionalArgs, getParams) {
 
 	// Parse route regex, if no matches, return the route
 	var matches = route.match(ROUTE_RE);
 	if (!matches) matches = [];
 
-	return matches.reduce(function(currentRoute, match) {
+	route = matches.reduce(function(currentRoute, match) {
 
-		// Get first match and fetch property from args. if no
+		// Get first match and fetch property from positional args. if no
 		// matches, raise exception
 		var property = match.slice(2, match.length -2);
-		var propertyArg = args[property];
+		var propertyArg = positionalArgs[property];
 		if (!propertyArg){
 			throw new Error("Property " + property + " was not found.");
 		}
@@ -19,6 +19,14 @@ var _parseRoute = function(route, args) {
 		// Return new route with property
 		return currentRoute.replace(match, propertyArg);
 	}, route);
+
+	// If there are any GET parameters, add them now and append to existing route.
+	var getParamsString = $.param(getParams || {});
+	if (getParamsString) {
+		route = route + '?' + getParamsString;
+	}
+
+	return route;
 
 }
 
@@ -31,7 +39,13 @@ var APIProcess = function(params) {
 }
 
 APIProcess.prototype.getDefaultParams = function() {
-	return this._params['defaultParams'];
+	return this._params['defaultArgs'];
+}
+
+APIProcess.prototype.withArgs = function(args) {
+	return new APIProcess(_extend(this._params, {
+		args: args
+	}));
 }
 
 APIProcess.prototype.havingPositional = function(args) {
@@ -46,7 +60,8 @@ APIProcess.prototype._buildURL = function() {
 	}
 	return _parseRoute(
 		this._params['endpoint'],
-		_extend(this._params['positionalParams'])
+		_extend(this._params['positionalParams']),
+		_extend(this._params['defaultArgs'], this._params['args'])
 	);
 }
 
@@ -56,9 +71,15 @@ APIProcess.prototype.callEndpoint = function(endpoint) {
 	}));
 }
 
+APIProcess.prototype.fetch = function() {
+	return $.ajax({
+		url: this._buildURL()
+	});
+}
+
 var createAPI = function(params) {
 	return new APIProcess({
-		defaultParams: params
+		defaultArgs: params
 	});
 };
 
